@@ -1,9 +1,6 @@
-checkerboard
-============
-
 Checkerboard tiling with python and dancing links.
 
-This is an experoment in using the python implementation of Knuth's Algorithm X,
+This is an experiment in using the python implementation of Knuth's Algorithm X,
 posted at http://www.cs.mcgill.ca/~aassaf9/python/algorithm_x.html by 
 Ali Assaf. I did a python implementation using dicts myself, many years ago,
 but I'm certain it wasn't this elegant.
@@ -15,4 +12,4 @@ was never able to do it.  A years or so ago, I ran across the solution on line, 
 of course shwos the shapes of the pieces.  I've been meaning to solve the puzzle
 with dancing links, and this is a good excuse.
 
-The solution is shown in the file solution.jpg
+The solution I found online is shown in the file solution.jpg
