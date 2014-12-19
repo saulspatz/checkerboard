@@ -43,7 +43,7 @@ is to choose a subset of the rows, such that a one appears exactly once in
 each column of the submatrix comprising those rows.
 
 Both X and Y are represented as dicts, with the key a column id in the
-case of X or a row id in the case of Y.  In X the value is a dict of row ids, 
+case of X or a row id in the case of Y.  In X the value is a set of row ids, 
 and for Y the value is a list of column ids.  The ids in the collection are those
 with a one in the indicated line.
 
