@@ -36,7 +36,8 @@ minimum x value, or one less, depending on parity.
 from dancingLinks import solve
 from functools import reduce
 from collections import defaultdict
-from drawBoard import drawBoard, printBoard
+from drawBoard import drawSolutions
+import os
 
 class Positions(dict):
     rowId =1                                  # static class variable
@@ -50,26 +51,26 @@ class Positions(dict):
         ensure that each piece is used exactly once.)
         '''  
         super().__init__()
-        #global rowId
-        base.sort()                                 # just to be sure
+        base.sort()                                
         self.translate(base, id)
         
         # now rotate three times
+        # Note that the rotation reverses the colors, so when we 
+        # translate back to standard position, we must reverse them again.
         for rotate in range(3):
             pos = base
             pos = [(7-y, x) for (x, y) in pos]
             minx = min(pos, key = lambda c: c[0])[0]
             miny = min(pos, key = lambda c: c[1])[1]
-            if (miny -minx) % 2 != 0:
+            if (miny + minx) % 2 == 0:
                 minx -= 1
             base = [(x-minx, y-miny) for (x, y) in pos]
             base.sort()
-            if base in self.values():       # skip symmetric positions
+            if base + [id] in self.values():       # skip symmetric positions
                 continue
             self.translate(base, id)
     
     def translate(self, base, id):
-        #global rowId
         for deltay in range(0, 8):
             start = -1 if deltay % 2 else 0
             for deltax in range(start, 8, 2):
@@ -92,30 +93,52 @@ def expand(soln):
         row = Y[id]
         cells = row[:-1]
         symbol = row[-1]
-        for r, c in cells:
-            answer[r][c] = symbol
+        for x, y in cells:
+            answer[x][y] = symbol
     return answer
 
 def equiv(s, t):
     '''
-    s and t are boards, as returned by expand.  Are they equivalent under rotation?
-    '''
-    # Test 90 degree, 180 degree, 270 degree counterclockwise rotations
-    return ( testRotation(s, t, lambda x, y: (7-y, x)) or     
-                 testRotation(s, t, lambda x, y: (7-x, 7-y)) or 
-                testRotation(s, t, lambda x, y: (y, 7-x)) ) 
-
-def testRotation(s, t, rot):
-    '''
-    Does the given rotation carry s to t?
+    s and t are boards, as returned by expand.  Are they equivalent ?  The only possible
+    symmetry is a 180 degree roation, followd by an interchange of A and L
     '''
     for x in range(8):
         for y in range(8):
-            u, v = rot(x, y)
-            if s[x][y] != t[u][v]:
+            a = s[x][y]
+            b = t[7-x][7-y]
+            if a != b != set((a,b)) != set(('A', 'L')) :
                 return False
     return True
 
+def aBeforel(board):
+    '''
+    Since pieces A and L are identical, we report whether A is encountered
+    before L when the board is scanned.
+    '''
+    for row in board:
+        for a in row:
+            if a == 'A':
+                return True
+            if a == 'L':
+                return False
+            
+def transform(board):
+    '''
+    Because of the equivalence of the A and L pieces, a possible symmetry is
+    to rotate the board 180 degrees, then interchange A and L; A will still
+    come before L.  Compute the effect of this transformation.
+    '''
+    answer = [list(8*'a') for j in range(8)]
+    for x in range(8):
+        for y in range(8):
+            answer[x][y] = board[7-x][7-y]
+    for x in range(8):
+        for y in range(8):
+            if answer[x][y] == 'A':
+                answer[x][y] = 'L'
+            elif answer[x][y] == 'L':
+                answer[x][y] == 'A'
+                
 # Define the pieces.  The ids are arbitary.        
 
 # Piece 1
@@ -222,15 +245,20 @@ for row in Y:
     for col in Y[row]:
         X[col].add(row)
 
+
+for f in [f for f in os.listdir('.') if f.startswith('board')]:
+    os.remove('./'+f)
+    
 solutions = []
 seq = 1
 for soln in solve(X, Y):
     board = expand(soln)
+    if not aBeforel(board):
+        continue
     for brd in solutions:
         if equiv(board, brd) : break
     else:                           # loop else                      
         solutions.append(board)
-        printBoard(board, seq)
-        drawBoard(board, seq)
         seq += 1
+drawSolutions(solutions)
     
