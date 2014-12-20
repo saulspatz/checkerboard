@@ -3,12 +3,14 @@ checkerboard.py
 
 This program will create the data and call the solver
 
-The board is represented as a square with cells (0,0) to (7, 7), 
-(0,) being visualized as the lower left-hand corner so the 
-board lies in the first quadrant.  WLOG, cell (0, 0) is white.   
+The board is represented as a square with cells (0,0) to (7, 7). 
+The coordinates are as in computer graphics, so x increases
+from left to right, and y increases from top to bottom.  The top
+left-hand corner of the board is (0,0).  WLOG cell (0,0) is
+white.
 
 Each piece is described by an id and a list of cell coordiantes.
-The cells are those the piece would occupy if placed as far down 
+The cells are those the piece would occupy if placed as far up 
 and to the left as possible, in one of its orientations.  To translate
 the piece, we must add (deltax, deltay) to each cell, but to preserve
 cell color, we must have deltax + deltay = 0 (mod ).  
@@ -22,10 +24,10 @@ coords c have 0 <= c < 8 to see  if this is a legal move.
 
 The next thing we have to do for each piece is rotate it.
 (x, y) --> (7-y, x)
-gives a 90 degree counter clockwise rotation, and we can do it 3 times.
+gives a 90 degree clockwise rotation, and we can do it 3 times.
 
 We need to put the piece in standard position after rotating it, so that it is
-as far to the left, an as low down as possible.  That is, we want to subtract the
+as far to the left, and as far up as possible.  That is, we want to subtract the
 minimum x value from all coordinates, and we want to subtract the minimum
 y value also, but the total subtraction must be even to preserve color.  We just 
 follow the same rule as above: subtract the minimum y value, and either the
@@ -34,6 +36,7 @@ minimum x value, or one less, depending on parity.
 from dancingLinks import solve
 from functools import reduce
 from collections import defaultdict
+from drawBoard import drawBoard, printBoard
 
 class Positions(dict):
     rowId =1                                  # static class variable
@@ -120,7 +123,7 @@ def testRotation(s, t, rot):
 #  B
 #  W
 
-p = ('A', [(0,0), (0, 1), (0,2), (1,2), (2, 2), (2,3)])
+p = ('A', [(0,0), (1, 0), (2, 0), (3,0), (0,1), (0,2)])
 Y = Positions(*p)
 
 # Piece 2
@@ -130,21 +133,21 @@ Y = Positions(*p)
 #  _W
 #  _B
 
-p = ('B', [(0,3), (0,4), (1,0), (1,1), (1,2), (1,3), (1,4)])
+p = ('B', [(0,0), (1, 0), (0,1), (1,1), (1,2), (1,3), (1,4)])
 Y.update(Positions(*p))
 
 # Piece 3
-# _WB
-# WBW
+# __WB
+# _WBW
 
-p = ('C', [(0,0), (1,0), (2, 0), (1,1), (2,1)])
+p = ('C', [(2,0), (3,0), (1, 1), (2,1), (3,1)])
 Y.update(Positions(*p))
 
 # Piece 4
-# _WB
-# _BWBW
+# WB
+# BWBW
 
-p = ('D', [(1,0),(2,0),(3,0), (4,0), (1,1), (2,1)])
+p = ('D', [(0,0),(1,0), (0,1),(1,1),(2,1),(3,1)])
 Y.update(Positions(*p))
 
 # Piece 5
@@ -158,7 +161,7 @@ Y.update(Positions(*p))
 # ___W
 # ___B
 
-p = ['F', [(3,0), (3,1), (1,2), (2,2), (3,2)]]
+p = ['F', [(1,0),(2,0),(3,0), (3,1), (3, 2)]]
 Y.update(Positions(*p))
 
 # Piece 7
@@ -168,7 +171,7 @@ Y.update(Positions(*p))
 # __B
 # __W
 
-p = ['G', [(2,0), (2,1), (2,2), (2,3), (1,4), (2,4)]]
+p = ['G', [(1,0),(2,0),(2,1),(2,2),(2,3),(2,4)]]
 Y.update(Positions(*p))
 
 # Piece 8
@@ -178,14 +181,14 @@ Y.update(Positions(*p))
 # _W
 # _B
 
-p = ['H', [(1,0), (1,1), (1,2), (1,3), (1,4), (2,4)]]
+p = ['H', [(1,0), (2,0), (1,1),(1,2),(1,3),(1,4)]]
 Y.update(Positions(*p))
 
 # Piece 9
-# BW
-# W
+# _BW
+# _W
 
-p = ['I', [(0,0), (0,1), (1,1)]]
+p = ['I', [(1,0), (2,0), (1,1)]]
 Y.update(Positions(*p))
 
 # Piece 10
@@ -193,7 +196,7 @@ Y.update(Positions(*p))
 # __BW
 # _BW
 
-p = ['J', [(1,0), (2,0), (2,1), (3,1), (3,2)]]
+p = ['J', [(3,0), (2,1), (3,1), (1,2), (2,2)]]
 Y.update(Positions(*p))
 
 # Piece 11
@@ -203,7 +206,7 @@ Y.update(Positions(*p))
 # B
 # W
 
-p = ['K', [(0,0), (0,1), (0, 2), (0, 3), (1,3), (1,4)]]
+p = ['K', [(1,0),(0,1),(1,1),(0,2),(0,3),(0,4)]]
 Y.update(Positions(*p))
 
 # Piece 12
@@ -211,7 +214,7 @@ Y.update(Positions(*p))
 # ____B
 #_BWBW
 
-p = ['L', [(1,0), (2,0), (3,0), (4, 0), (4,1), (4,2)]]
+p = ['L', [(4,0), (4,1), (1,2), (2,2), (3,2), (4,2)]]
 Y.update(Positions(*p))
 
 X = defaultdict(set)
@@ -220,10 +223,14 @@ for row in Y:
         X[col].add(row)
 
 solutions = []
+seq = 1
 for soln in solve(X, Y):
     board = expand(soln)
     for brd in solutions:
         if equiv(board, brd) : break
     else:                           # loop else                      
         solutions.append(board)
+        printBoard(board, seq)
+        drawBoard(board, seq)
+        seq += 1
     
